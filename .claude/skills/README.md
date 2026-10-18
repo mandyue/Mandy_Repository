@@ -10,6 +10,8 @@
 | [anthropics/financial-services](https://github.com/anthropics/financial-services) `financial-analysis` | `3-statement-model`、`dcf-model`、`comps-analysis`、`lbo-model`、`competitive-analysis`、`audit-xls`、`clean-data-xls`、`xlsx-author`、`pptx-author`、`ppt-template-creator`、`deck-refresh`、`ib-check-deck` | Apache-2.0 |
 | [anthropics/financial-services](https://github.com/anthropics/financial-services) `investment-banking` | `strip-profile`、`merger-model`、`teaser`、`pitch-deck`、`cim-builder`、`buyer-list`、`datapack-builder`、`deal-tracker`、`process-letter` | Apache-2.0 |
 
+| [anthropics/financial-services](https://github.com/anthropics/financial-services) `market-researcher` | `sector-overview`、`idea-generation` | Apache-2.0 |
+
 许可证原文见仓库根目录的 `third_party_licenses/`。
 
 `equity-research` 和 `private-equity` 两个官方插件已在 claude.ai 账号上启用，不在这里重复存放。
