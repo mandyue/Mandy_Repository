@@ -22,6 +22,9 @@
     padding: 5px 12px; font: inherit; cursor: pointer;
   }
   .toolbar label { display: flex; gap: 6px; align-items: center; }
+  .toolbar .group { display: flex; gap: 4px; align-items: center; padding-left: 12px; border-left: 1px solid #555; }
+  .toolbar .group button { min-width: 30px; padding: 5px 8px; }
+  .toolbar select { font: inherit; border-radius: 4px; border: 0; padding: 4px; }
   .page {
     width: 210mm; min-height: 297mm; margin: 20px auto; background: #fff;
     padding: 12mm 14mm; box-shadow: 0 2px 10px rgba(0,0,0,.15);
@@ -71,6 +74,24 @@
   <button onclick="window.print()">Print / Save as PDF</button>
   <button onclick="downloadHTML()">Download edited HTML</button>
   <label><input type="checkbox" onchange="document.body.classList.toggle('print-clean', this.checked)"> Hide highlights</label>
+  <span class="group" title="Format selected text">
+    Selected:
+    <select id="fontSize" onchange="setSelSize(this.value); this.value=''">
+      <option value="">Size</option>
+      <option>8</option><option>9</option><option>9.5</option><option>10</option><option>10.5</option>
+      <option>11</option><option>12</option><option>13</option><option>14</option><option>16</option><option>20</option>
+    </select>
+    <button onmousedown="event.preventDefault()" onclick="fmt('bold')"><b>B</b></button>
+    <button onmousedown="event.preventDefault()" onclick="fmt('italic')"><i>I</i></button>
+    <button onmousedown="event.preventDefault()" onclick="fmt('underline')"><u>U</u></button>
+    <button onmousedown="event.preventDefault()" onclick="fmt('removeFormat')" title="Clear formatting">Clear</button>
+  </span>
+  <span class="group" title="Whole resume text size">
+    Whole page:
+    <button onclick="zoomPage(-0.5)">A−</button>
+    <span id="pageSize">10pt</span>
+    <button onclick="zoomPage(0.5)">A+</button>
+  </span>
 </div>
 
 <div class="page" id="resume" contenteditable="true" spellcheck="true">
@@ -163,12 +184,53 @@
 </div>
 
 <script>
+  const resume = document.getElementById("resume");
+  let savedRange = null;
+  document.addEventListener("selectionchange", () => {
+    const sel = window.getSelection();
+    if (sel.rangeCount && resume.contains(sel.anchorNode)) savedRange = sel.getRangeAt(0).cloneRange();
+  });
+  function restoreSel() {
+    if (!savedRange) return false;
+    const sel = window.getSelection();
+    sel.removeAllRanges(); sel.addRange(savedRange);
+    return !savedRange.collapsed;
+  }
+  function fmt(cmd) { restoreSel(); document.execCommand(cmd); }
+  // Apply a pt size to the selection: mark it with <font size=7>, then swap those for styled spans
+  function setSelSize(pt) {
+    if (!pt || !restoreSel()) return;
+    document.execCommand("styleWithCSS", false, false);
+    document.execCommand("fontSize", false, "7");
+    const spans = [];
+    resume.querySelectorAll('font[size="7"]').forEach(f => {
+      const span = document.createElement("span");
+      span.style.fontSize = pt + "pt";
+      while (f.firstChild) span.appendChild(f.firstChild);
+      f.replaceWith(span);
+      spans.push(span);
+    });
+    // Keep the text selected so B / I / U can be applied next
+    if (spans.length) {
+      const r = document.createRange();
+      r.setStartBefore(spans[0]); r.setEndAfter(spans[spans.length - 1]);
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      savedRange = r.cloneRange();
+    }
+  }
+  function zoomPage(delta) {
+    const cur = parseFloat(getComputedStyle(resume).fontSize) * 0.75;
+    const next = Math.min(13, Math.max(8, Math.round((cur + delta) * 2) / 2));
+    resume.style.fontSize = next + "pt";
+    document.getElementById("pageSize").textContent = next + "pt";
+  }
+
   function downloadHTML() {
     const clone = document.documentElement.cloneNode(true);
     const blob = new Blob(["<!DOCTYPE html>\n" + clone.outerHTML], { type: "text/html" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "Mandy_Qiao_Resume.html";
+    a.download = "Mandy_Qiao_Resume_JPM_LevFin.html";
     a.click();
     URL.revokeObjectURL(a.href);
   }
